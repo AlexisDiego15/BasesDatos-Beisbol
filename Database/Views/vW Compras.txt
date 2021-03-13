@@ -1,0 +1,15 @@
+CREATE VIEW vW_Compras
+AS
+  SELECT DISTINCT CP.Id_Compra AS Id_Compra,
+         P.Id_Proveedor AS Id_Proveedor,
+         P.Nombre AS Nombre_Proveedor,
+         P.ApellidosP AS Apellidos_Paterno,
+         P.ApellidosM AS Apellidos_Materno,
+         C.Fecha AS Fecha,
+         (SELECT sum(CP1.Cantidad) FROM Compras_Producto CP1 WHERE CP1.Id_Compra = CP.Id_Compra) AS Cantidad_Total,
+         (SELECT sum(CP2.Cantidad * CP2.Precio_Unitario_Compra ) FROM Compras_Producto CP2 WHERE CP2.Id_Compra = CP.Id_Compra) AS Costo_Total
+  FROM Compras_Producto CP
+  INNER JOIN Productos Pr ON Pr.Id_Productos = CP.Id_Productos
+  INNER JOIN Proveedores P ON P.Id_Proveedor = Pr.Id_Proveedor
+  INNER JOIN Compras C ON C.Id_Compra = CP.Id_Compra
+GO

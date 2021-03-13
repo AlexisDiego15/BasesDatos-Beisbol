@@ -1,0 +1,80 @@
+CREATE PROCEDURE Alta_Equipo
+	@Descripcion varchar(50)
+	 AS
+BEGIN
+	 	  BEGIN TRAN
+	 	     IF(SELECT COUNT(*) FROM Equipos WHERE Descripcion=@Descripcion) < 1		  
+	 	     BEGIN
+	 	       BEGIN TRY
+			     SELECT 'Equipo registrado exitosamente' AS msj
+	 	         INSERT INTO Equipos(Descripcion) VALUES (@Descripcion)
+	 		   END TRY
+	 	       BEGIN CATCH
+	 	         SELECT 'Error al dar de alta' AS msj
+	 	         ROLLBACK
+	 	       END CATCH
+	 	     END
+	 	     ELSE
+	 	     BEGIN
+	 	       SELECT 'Ese equipo ya esta registrado' AS msj
+	 	       ROLLBACK
+	 	     END
+	 	 	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Equipo
+	@NuevaDescripcion varchar(50),
+	@Id_Equipo int
+	 AS
+BEGIN 
+    BEGIN TRAN
+		IF (SELECT COUNT(*) FROM Equipos WHERE Id_Equipos=@Id_Equipo) = 1 
+				BEGIN
+					IF(SELECT COUNT(*) FROM Equipos WHERE Descripcion=@NuevaDescripcion) < 1
+						BEGIN
+							SELECT 'Nombre modificado correctamente' as msj
+							UPDATE Equipos SET Descripcion = @NuevaDescripcion WHERE Id_Equipos = @Id_Equipo
+						END
+					ELSE
+					BEGIN 
+						SELECT 'Modificacion invalida' as msj
+						ROLLBACK
+					END
+				END
+		ELSE 
+		BEGIN 
+			SELECT 'No se pudo realizar la modificacion' as msj
+			ROLLBACK
+		END
+	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE Baja_Equipo
+	@Id_Equipo int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Equipos where Id_Equipos=@Id_Equipo) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Productos where Id_Equipos=@Id_Equipo) > 0
+					BEGIN
+						SELECT 'El equipo se deshabilito ya que no se puede borrar' AS msj
+						UPDATE Equipos SET Estatus = 0 WHERE Id_Equipos = @Id_Equipo
+					END 
+				ELSE
+					BEGIN
+						SELECT 'Equipo eliminado correctamente' AS msj
+						DELETE Equipos WHERE Id_Equipos = @Id_Equipo 
+					END
+				END
+		ELSE
+			BEGIN
+				SELECT 'Equipo habilitado correctamente' AS msj
+				UPDATE Equipos SET Estatus = 1 WHERE Id_Equipos = @Id_Equipo
+			END 
+
+	COMMIT TRAN
+END
+GO

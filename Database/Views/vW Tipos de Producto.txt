@@ -1,0 +1,5 @@
+create view vW_TipoProductos as
+select Categorias.Descripcion as Categoria, Tipo_Producto.Id_Tipo_Producto, Tipo_Producto.Descripcion, Tipo_Producto.Estatus
+from Tipo_Producto
+inner join Categorias on Tipo_Producto.Id_Categoria=Categorias.Id_Categoria
+go

@@ -1,0 +1,79 @@
+CREATE PROCEDURE Altas_Proveedores
+    @Nombre varchar(50),
+    @ApellidosP varchar(50),
+	@ApellidosM varchar(50),
+	@Calle nvarchar(40),
+	@No_Int int,
+	@No_Ext int,
+    @CP varchar(5),
+	@Descripcion_Asenta varchar(100),
+	@Telefono varchar(10)
+	AS
+BEGIN 
+    BEGIN TRAN
+		IF(SELECT COUNT(*) FROM Telefonos_Proveedores WHERE Telefono=@Telefono) < 1		  
+	 	     BEGIN
+				SELECT '1' as exito
+				INSERT INTO Proveedores(Nombre,ApellidosP, ApellidosM, Calle, No_Int, No_Ext, CP, Id_Asentamiento)
+				VALUES (@Nombre, @ApellidosP, @ApellidosM, @Calle, @No_Int, @No_Ext, @CP, (select id_asentamiento from SEPOMEX where cp = @CP and Descripcion_Asentamiento = @Descripcion_Asenta))
+
+				INSERT INTO Telefonos_Proveedores(Telefono,Id_Proveedor)
+				VALUES (@Telefono, (select top(1)Id_Proveedor from Proveedores order by 1 desc))
+			 END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO
+------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Proveedores
+  @Nombre varchar(50),
+  @ApellidosP varchar(50),
+  @ApellidosM varchar(50),
+  @Calle nvarchar(40),
+  @No_Int int,
+  @No_Ext int,
+  @CP varchar(5),
+  @Descripcion_Asenta varchar(100),
+  @Id_Proveedor int
+  AS
+  BEGIN
+    BEGIN TRAN
+	 SELECT '1' AS exito
+      UPDATE Proveedores SET Nombre = @Nombre,
+                              ApellidosP = @ApellidosP,
+                              ApellidosM = @ApellidosM,
+                              Calle = @Calle,
+                              No_Int = @No_Int,
+                              No_Ext = @No_Ext,
+                              CP = @CP,
+                              Id_Asentamiento = (select id_asentamiento from SEPOMEX where cp = @CP and Descripcion_Asentamiento = @Descripcion_Asenta)
+                              WHERE Id_Proveedor = @Id_Proveedor
+
+    COMMIT TRAN
+  END
+GO
+-------------------------------------------------------------------
+
+CREATE PROCEDURE Eliminar_Proveedores
+    @Id_Proveedor int
+AS
+BEGIN 
+    BEGIN TRAN
+	    IF(SELECT COUNT(*) FROM Productos WHERE Id_Proveedor=@Id_Proveedor) = 0		  
+	 	     BEGIN
+				SELECT '1' as exito
+				DELETE Telefonos_Proveedores WHERE Id_Proveedor = @Id_Proveedor
+				DELETE Proveedores WHERE Id_Proveedor = @Id_Proveedor
+			END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO

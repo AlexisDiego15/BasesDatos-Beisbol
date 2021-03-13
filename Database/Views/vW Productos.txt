@@ -1,0 +1,20 @@
+CREATE VIEW vW_Productos
+AS
+  SELECT count(P.Id_Presentacion) AS Presentaciones_diferentes,
+         P.Id_Productos AS Id_Productos,
+         Pr.Nombre AS Nombre_Producto,
+         Pr.Precio_Venta AS Precio_Venta,
+         Pr.Precio_Compra AS Precio_Compra,
+         Pr.Id_Proveedor AS Id_Proveedor,
+         C.Descripcion AS Categoria,
+         TP.Descripcion AS Tipo_Producto,
+         E.Descripcion AS Equipo,
+         M.Descripcion AS Marca
+  FROM Presentacion P
+  INNER JOIN Productos Pr ON Pr.Id_Productos = P.Id_Productos
+  INNER JOIN Tipo_Producto TP ON TP.Id_Tipo_Producto = Pr.Id_Tipo_Producto
+  INNER JOIN Categorias C ON C.Id_Categoria = TP.Id_Categoria
+  INNER JOIN Equipos E ON E.Id_Equipos = Pr.Id_Equipos
+  INNER JOIN Marcas M ON M.Id_Marca = Pr.Id_Marca
+  GROUP BY P.Id_Productos, Pr.Nombre, Pr.Precio_Venta, Pr.Precio_Compra, Pr.Id_Proveedor, C.Descripcion, TP.Descripcion, E.Descripcion, M.Descripcion
+GO

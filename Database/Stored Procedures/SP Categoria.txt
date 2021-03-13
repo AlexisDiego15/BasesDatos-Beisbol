@@ -1,0 +1,79 @@
+CREATE PROCEDURE Alta_Categoria
+	@Descripcion varchar(50)
+	 AS
+BEGIN
+	 	  BEGIN TRAN
+	 	     IF(SELECT COUNT(*) FROM Categorias WHERE Descripcion=@Descripcion) < 1		  
+	 	     BEGIN
+	 	       BEGIN TRY
+			     SELECT 'Categoria registrada exitosamente' AS msj
+	 	         INSERT INTO Categorias(Descripcion) VALUES (@Descripcion)
+	 		   END TRY
+	 	       BEGIN CATCH
+	 	         SELECT 'Error al dar de alta' AS msj
+	 	         ROLLBACK
+	 	       END CATCH
+	 	     END
+	 	     ELSE
+	 	     BEGIN
+	 	       SELECT 'Esa categoria ya esta registrada' AS msj
+	 	       ROLLBACK
+	 	     END
+	 	 	COMMIT TRAN
+END
+GO
+----------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Categoria
+	@NuevaDescripcion varchar(50),
+	@Id_Categoria int
+	 AS
+BEGIN 
+    BEGIN TRAN
+		IF (SELECT COUNT(*) FROM Categorias WHERE Id_Categoria=@Id_Categoria) = 1
+				BEGIN
+				IF(SELECT COUNT(*) FROM Categorias WHERE Descripcion=@NuevaDescripcion) < 1
+					BEGIN
+					SELECT 'Categoria modificada correctamente' as msj
+					UPDATE Categorias SET Descripcion = @NuevaDescripcion WHERE Id_Categoria = @Id_Categoria
+				END
+				ELSE
+				BEGIN 
+					SELECT 'Modificacion invalida' as msj
+					ROLLBACK
+				END
+		END
+		ELSE 
+		BEGIN
+			SELECT 'No se pudo realizar la modificacion' as msj
+			ROLLBACK
+		END
+	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------
+CREATE PROCEDURE Baja_Categoria
+	@Id_Categoria int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Categorias where Id_Categoria=@Id_Categoria) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Tipo_Producto where Id_Categoria=@Id_Categoria) > 0
+					BEGIN
+						SELECT 'La categoria se deshabilito ya que no se puede borrar' AS msj
+						UPDATE Categorias SET Estatus = 0 WHERE Id_Categoria = @Id_Categoria
+					END 
+				ELSE
+					BEGIN
+						SELECT 'Categoria eliminada correctamente' AS msj
+						DELETE Categorias WHERE Id_Categoria = @Id_Categoria 
+					END
+			END
+		    ELSE
+				BEGIN
+					SELECT 'Categoria habilitada correctamente' AS msj
+					UPDATE Categorias SET Estatus = 1 WHERE Id_Categoria = @Id_Categoria
+				END 
+	COMMIT TRAN
+END
+GO

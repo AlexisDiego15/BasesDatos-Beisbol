@@ -1,0 +1,21 @@
+CREATE VIEW vW_ProveedoresTelefonos
+AS
+  SELECT Pr.Id_Proveedor AS Id,
+         Pr.Nombre AS Nombre,
+         Pr.ApellidosP AS Apellidos_Paterno,
+         Pr.ApellidosM AS Apellidos_Materno,
+         LEFT(P.Telefonos,Len(P.Telefonos)-1) As Telefonos
+  FROM
+    (
+       SELECT DISTINCT ST2.Id_Proveedor,
+           (
+               SELECT ST1.Telefono + ', ' AS [text()]
+               FROM  [dbo].[Telefonos_Proveedores] ST1
+               WHERE ST1.Id_Proveedor = ST2.Id_Proveedor
+               ORDER BY ST1.Id_Proveedor
+               FOR XML PATH ('')
+           ) AS Telefonos
+       FROM [dbo].[Telefonos_Proveedores] ST2
+     ) [P], Proveedores Pr
+ WHERE P.Id_Proveedor = Pr.Id_Proveedor
+GO

@@ -1,0 +1,80 @@
+CREATE PROCEDURE Alta_Talla
+	@Descripcion varchar(15)
+	 AS
+BEGIN
+	 	  BEGIN TRAN
+	 	     IF(SELECT COUNT(*) FROM Medidas_Tallas WHERE Talla=@Descripcion) < 1		  
+	 	     BEGIN
+	 	       BEGIN TRY
+			     SELECT 'Talla registrada exitosamente' AS msj
+	 	         INSERT INTO Medidas_Tallas(Talla) VALUES (@Descripcion)
+	 		   END TRY
+	 	       BEGIN CATCH
+	 	         SELECT 'Error al dar de alta' AS msj
+	 	         ROLLBACK
+	 	       END CATCH
+	 	     END
+	 	     ELSE
+	 	     BEGIN
+	 	       SELECT 'Esa talla ya esta registrada' AS msj
+	 	       ROLLBACK
+	 	     END
+	 	 	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Talla
+	@NuevaDescripcion varchar(15),
+	@Id_Talla int
+	 AS
+BEGIN 
+    BEGIN TRAN
+		IF (SELECT COUNT(*) FROM Medidas_Tallas WHERE Id_Medidas_Tallas=@Id_Talla) = 1
+				BEGIN
+					IF(SELECT COUNT(*) FROM Medidas_Tallas WHERE Talla=@NuevaDescripcion) < 1
+					BEGIN
+						SELECT 'Talla modificada correctamente' as msj
+						UPDATE Medidas_Tallas SET Talla = @NuevaDescripcion WHERE Id_Medidas_Tallas = @Id_Talla
+					END
+					ELSE
+					BEGIN 
+						SELECT 'Modificacion invalida' as msj
+						ROLLBACK
+					END
+				END
+		ELSE
+			BEGIN 
+				SELECT 'No se pudo realizar la modificacion' as msj
+				ROLLBACK
+			END
+	COMMIT TRAN
+END
+GO
+--------------------------------------------------------------------------------------------
+CREATE PROCEDURE Baja_Talla
+	@Id_Talla int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Medidas_Tallas where Id_Medidas_Tallas=@Id_Talla) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Presentacion where Id_Medidas_Tallas=@Id_Talla) > 0
+					BEGIN
+						SELECT 'La talla se deshabilito ya que no se puede eliminar' AS msj
+						UPDATE Medidas_Tallas SET Estatus = 0 WHERE Id_Medidas_Tallas = @Id_Talla
+					END 
+				ELSE
+					BEGIN 
+						SELECT 'Talla eliminada correctamente' AS msj
+						DELETE Medidas_Tallas where Id_Medidas_Tallas=@Id_Talla
+					END 
+		END 
+		ELSE
+			BEGIN
+				SELECT 'Talla habilitada correctamente' AS msj
+				UPDATE Medidas_Tallas SET Estatus = 1 WHERE Id_Medidas_Tallas = @Id_Talla
+			END 
+		
+	COMMIT TRAN
+END
+GO

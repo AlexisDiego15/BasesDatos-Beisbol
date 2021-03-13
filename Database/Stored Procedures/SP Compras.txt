@@ -1,0 +1,32 @@
+CREATE PROCEDURE Alta_Compra
+@Id_Compra INT OUTPUT,
+@Id_proveedor INT
+AS
+DECLARE @Fecha DATE
+	BEGIN
+		BEGIN TRAN
+					SET @Fecha = GETDATE()
+					INSERT INTO Compras(Id_Proveedor,Fecha)
+					VALUES (@Id_proveedor,@Fecha)
+		COMMIT TRAN
+	SET @Id_Compra=(select top(1)Id_Compra  from Compras order by Id_Compra desc)	
+	END
+GO
+--------------------------------------------------
+CREATE PROCEDURE Alta_Compras_Producto
+	@Id_Compra int,
+	@Id_Presentacion int,
+	@Id_Productos int,
+	@Cantidad int,
+	@Precio_uni float
+AS
+BEGIN
+	BEGIN TRANSACTION
+			INSERT INTO Compras_Producto(Id_Compra,Id_Presentacion,Id_Productos,Cantidad,Precio_Unitario_Compra)
+			VALUES (@Id_Compra,@Id_Presentacion,@Id_Productos,@Cantidad,@Precio_uni)
+			UPDATE Presentacion SET Existencias = (Existencias+ @Cantidad) WHERE Id_Presentacion = @Id_Presentacion
+			UPDATE Productos SET Precio_Compra = @Precio_uni WHERE Id_Productos = @Id_Productos
+			UPDATE Presentacion SET Estatus = 1 WHERE Id_Presentacion = @Id_Presentacion
+	COMMIT TRANSACTION
+END
+GO

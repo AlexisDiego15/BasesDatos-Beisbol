@@ -1,0 +1,10 @@
+CREATE VIEW vW_Direccion AS
+SELECT S.CP AS CodigoPostal, E.Descripcion AS Estado,M.Nombre AS Municipio_Delegacion,
+	C.Descripcion AS Ciudad
+FROM Ciudades C, Estados E,Munic_Deleg M,Codigo_postales S
+WHERE C.Id_Ciudad = S.Id_Ciudad 
+AND E.Id_Estado = S.Id_Estado
+AND M.Id_Munic_Deleg = S.Id_Munic_Deleg
+AND C.Id_Estado = E.Id_Estado
+AND M.Id_Estado = E.Id_Estado
+GO

@@ -1,0 +1,186 @@
+CREATE PROCEDURE Alta_Productos
+	@Id_Producto [int] OUTPUT,
+	@Nombre [varchar](50),
+	@Precio_v [float],
+	@Id_Proveedor [int],
+	@Equipo [varchar](50),
+	@Marca [varchar](50),
+	@Tipo_Producto [varchar](50),
+    @Id_Categoria [int]
+AS
+BEGIN
+	BEGIN TRAN
+		
+		IF(SELECT COUNT(*) FROM Productos WHERE Nombre=@Nombre 
+			AND Id_Tipo_Producto=(SELECT Id_Tipo_Producto FROM Tipo_Producto where Descripcion=@Tipo_Producto AND Id_Categoria=@Id_Categoria)
+			AND Id_Equipos=(SELECT Id_Equipos FROM Equipos where Descripcion=@Equipo)
+			AND Id_Marca=(SELECT Id_Marca FROM Marcas where Descripcion=@Marca)
+			AND Id_Proveedor=@Id_Proveedor) < 1
+		BEGIN
+				INSERT INTO Productos(Nombre, Precio_Compra, Precio_Venta, Id_Proveedor, Id_Equipos, Id_Marca, Id_Tipo_Producto)
+				VALUES (@Nombre, 0, @Precio_v, @Id_Proveedor,
+				(SELECT Id_Equipos FROM Equipos where Descripcion=@Equipo),
+				(SELECT Id_Marca FROM Marcas where Descripcion=@Marca),
+				(SELECT Id_Tipo_Producto FROM Tipo_Producto where Descripcion=@Tipo_Producto AND Id_Categoria=@Id_Categoria))
+		END
+		ELSE
+			BEGIN
+				SET @Id_Producto=0
+				ROLLBACK
+			END
+	COMMIT TRAN
+	SET @Id_Producto=(select top(1)Id_Productos  from Productos order by Id_Productos desc)	
+END
+GO
+
+------------------------------------------------------------------------
+CREATE PROCEDURE Alta_Presentacion
+	@Medida_Talla [varchar](15),
+	@Id_Productos [int]
+AS
+BEGIN
+	BEGIN TRAN
+		IF(SELECT COUNT(*) FROM Presentacion WHERE Id_Productos=@Id_Productos AND
+		Id_Medidas_Tallas=(SELECT Id_Medidas_Tallas FROM Medidas_Tallas where Talla=@Medida_Talla)) < 1
+		BEGIN
+			SELECT '1' as msj
+			INSERT INTO Presentacion( Id_Medidas_Tallas, Id_Productos)
+			VALUES (
+				(SELECT Id_Medidas_Tallas FROM Medidas_Tallas where Talla=@Medida_Talla),
+				@Id_Productos)
+		END
+		ELSE
+		BEGIN
+			SELECT '0' as msj
+			ROLLBACK
+		END
+		
+	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------
+CREATE PROCEDURE Modificar_Productos
+	@Id_Producto [int],
+	@Nombre [varchar](50),
+	@Precio_v [float],
+	@Equipo [varchar](50),
+	@Marca [varchar](50),
+	@Tipo_Producto [varchar](50),
+    @Id_Categoria [int]
+AS
+BEGIN
+	BEGIN TRAN
+		
+		IF(SELECT COUNT(*) FROM Productos WHERE Nombre=@Nombre 
+			AND Id_Tipo_Producto=(SELECT Id_Tipo_Producto FROM Tipo_Producto where Descripcion=@Tipo_Producto AND Id_Categoria=@Id_Categoria)
+			AND Id_Equipos=(SELECT Id_Equipos FROM Equipos where Descripcion=@Equipo)
+			AND Id_Marca=(SELECT Id_Marca FROM Marcas where Descripcion=@Marca)
+			AND Precio_Venta=@Precio_v) < 1
+		BEGIN
+			SELECT '1' AS msj
+				UPDATE Productos
+				SET  Nombre=@Nombre,
+					 Precio_Venta=@Precio_v, 
+					 Id_Equipos=(SELECT Id_Equipos FROM Equipos where Descripcion=@Equipo), 
+					 Id_Marca=(SELECT Id_Marca FROM Marcas where Descripcion=@Marca),
+					 Id_Tipo_Producto=(SELECT Id_Tipo_Producto FROM Tipo_Producto where Descripcion=@Tipo_Producto AND Id_Categoria=@Id_Categoria)
+					 WHERE Id_Productos=@Id_Producto
+		END
+		ELSE
+			BEGIN
+				SELECT '0' AS msj
+				ROLLBACK
+			END
+	COMMIT TRAN
+END
+GO
+------------------------------------------------------------
+CREATE PROCEDURE Eliminar_Productos
+    @Id_Producto int
+AS
+BEGIN 
+    BEGIN TRAN
+	    IF(SELECT COUNT(*) FROM Compras_Producto WHERE Id_Productos=@Id_Producto) = 0		  
+	 	     BEGIN
+				SELECT '1' as exito
+				DELETE Presentacion WHERE Id_Productos = @Id_Producto
+				DELETE Productos WHERE Id_Productos = @Id_Producto
+			END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_ProductoProveedor
+	@Id_Producto [int],
+    	@Id_Proveedor [int]
+AS
+BEGIN
+	BEGIN TRAN
+		BEGIN
+			SELECT '1' AS msj
+				UPDATE Productos
+				SET  Id_Proveedor=@Id_Proveedor
+				WHERE Id_Productos=@Id_Producto
+		END
+	COMMIT TRAN
+END
+GO
+------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE Baja_Presentacion
+	@Id_Presentacion int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Presentacion where Id_Presentacion=@Id_Presentacion) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Compras_Producto where Id_Presentacion=@Id_Presentacion) > 0 
+					BEGIN
+						SELECT 'La presentacion se deshabilito ya que no se puede eliminar' AS msj
+						UPDATE Presentacion SET Estatus = 0 WHERE Id_Presentacion = @Id_Presentacion
+					END 
+				ELSE
+					BEGIN 
+						IF (SELECT COUNT(*) FROM Presentacion
+						WHERE Id_Productos=(SELECT Id_Productos from Presentacion where Id_Presentacion=@Id_Presentacion)) > 1 
+							BEGIN
+								SELECT 'Presentacion eliminada correctamente' AS msj
+								DELETE Presentacion where Id_Presentacion = @Id_Presentacion
+							END 
+						ELSE
+							BEGIN
+								SELECT 'La presentacion se deshabilito ya que no se puede eliminar' AS msj
+								UPDATE Presentacion SET Estatus = 0 WHERE Id_Presentacion = @Id_Presentacion
+							END
+					END
+		END 
+		ELSE
+			BEGIN
+				SELECT 'Presentacion habilitada correctamente' AS msj
+				UPDATE Presentacion SET Estatus = 1 WHERE Id_Presentacion = @Id_Presentacion
+			END 
+		
+	COMMIT TRAN
+END
+GO
+------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE Modificar_Presentacion
+	@Id_Producto int,
+	@Medida_Talla varchar(15)
+	 AS
+BEGIN
+    BEGIN TRAN
+			SELECT 'Modificacion realizada correctamente' AS msj
+			UPDATE Presentacion 
+			SET Id_Medidas_Tallas = (SELECT Id_Medidas_Tallas FROM Medidas_Tallas WHERE Talla=@Medida_Talla) 
+			 WHERE Id_Productos=@Id_Producto
+	COMMIT TRAN
+END
+GO

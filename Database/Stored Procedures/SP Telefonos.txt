@@ -1,0 +1,64 @@
+CREATE PROCEDURE Altas_ProveedoresTelefonos
+    @Id_Proveedor int,
+	@Telefono varchar(10)
+	AS
+BEGIN 
+    BEGIN TRAN
+	    IF(SELECT COUNT(*) FROM Telefonos_Proveedores WHERE Telefono=@Telefono) < 1		  
+	 	     BEGIN
+				SELECT '1' as exito
+				INSERT INTO Telefonos_Proveedores(Telefono,Id_Proveedor)
+				VALUES (@Telefono,  @Id_Proveedor)
+			END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO
+--------------------------------------------
+CREATE PROCEDURE Modificar_ProveedoresTelefonos
+    @Id_Proveedor int,
+	@Telefono_nuevo varchar(10),
+	@Telefono_ant varchar(10)
+AS
+BEGIN 
+    BEGIN TRAN
+	    IF(SELECT COUNT(*) FROM Telefonos_Proveedores WHERE Telefono=@Telefono_nuevo) < 1		  
+	 	     BEGIN
+				SELECT '1' as exito
+					UPDATE Telefonos_Proveedores
+					SET Telefono = @Telefono_nuevo
+					WHERE Id_Proveedor = @Id_Proveedor AND Id_Telefono=(SELECT Id_Telefono where Telefono=@Telefono_ant)
+			END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO
+------------------------------------------------
+CREATE PROCEDURE Eliminar_ProveedoresTelefonos
+        @Id_Proveedor int,
+	@Telefono varchar(10)
+AS
+BEGIN 
+    BEGIN TRAN
+	    IF(SELECT COUNT(*) FROM Telefonos_Proveedores WHERE Id_Proveedor=@Id_Proveedor) > 1		  
+	 	     BEGIN
+				SELECT '1' as exito
+					DELETE Telefonos_Proveedores
+					WHERE Id_Proveedor = @Id_Proveedor AND Id_Telefono=(SELECT Id_Telefono where Telefono=@Telefono)
+			END
+		ELSE
+		BEGIN
+			SELECT '0' as exito
+			ROLLBACK
+		END
+    COMMIT TRAN
+END
+GO

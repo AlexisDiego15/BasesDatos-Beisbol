@@ -1,0 +1,23 @@
+CREATE VIEW vW_Productos_Presentaciones
+AS
+  SELECT P.Id_Presentacion AS Id_Presentacion,
+         P.Id_Productos AS Id_Productos,
+         Pr.Nombre AS Nombre_Producto,
+         Pr.Precio_Venta AS Precio_Venta,
+         Pr.Precio_Compra AS Precio_Compra,
+         Pr.Id_Proveedor AS Id_Proveedor,
+         C.Descripcion AS Categoria,
+         TP.Descripcion AS Tipo_Producto,
+         MT.Talla AS Medida_Talla,
+         E.Descripcion AS Equipo,
+         M.Descripcion AS Marca,
+         P.Estatus AS Estatus,
+         P.Existencias AS Existencias
+  FROM Presentacion P
+  INNER JOIN Productos Pr ON Pr.Id_Productos = P.Id_Productos
+  INNER JOIN Tipo_Producto TP ON TP.Id_Tipo_Producto = Pr.Id_Tipo_Producto
+  INNER JOIN Categorias C ON C.Id_Categoria = TP.Id_Categoria
+  INNER JOIN Medidas_Tallas MT ON MT.Id_Medidas_Tallas = P.Id_Medidas_Tallas
+  INNER JOIN Equipos E ON E.Id_Equipos = Pr.Id_Equipos
+  INNER JOIN Marcas M ON M.Id_Marca = Pr.Id_Marca
+GO

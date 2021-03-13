@@ -1,0 +1,20 @@
+CREATE TRIGGER trRegistroPrecios
+ON [dbo].[Productos]
+AFTER INSERT, UPDATE AS
+BEGIN
+	BEGIN TRAN
+		DECLARE
+			@Precio_Venta int,
+			@Precio_Compra int
+		
+		SET @Precio_Compra = (SELECT Precio_Compra FROM inserted)
+		SET	@Precio_Venta = (SELECT Precio_Venta FROM inserted)
+
+		IF @Precio_Venta/@Precio_Compra < 1.18
+		BEGIN
+			UPDATE  [dbo].[Productos] SET Precio_Venta = Precio_Compra*1.18
+			WHERE Id_Productos = (SELECT Id_Productos FROM inserted)
+		END
+		
+	COMMIT TRAN
+END

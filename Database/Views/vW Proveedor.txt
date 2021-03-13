@@ -1,0 +1,23 @@
+CREATE VIEW vW_Proveedores
+AS
+  SELECT P.Id_Proveedor AS ID,
+       P.Nombre AS Nombre,
+       P.ApellidosP AS ApellidoP,
+       P.ApellidosM AS ApellidosM,
+       P.Calle AS Calle,
+       P.No_Ext AS No_Ext,
+       P.No_Int AS No_Int,
+       S.Descripcion_Asentamiento AS Colonia,
+       P.CP AS Codigo_Postal,
+       M.Nombre AS Municipio,
+       C.Descripcion AS Ciudad,
+       E.Descripcion AS Estado
+  FROM Proveedores P, SEPOMEX S, Munic_Deleg M, Estados E, Ciudades C
+  WHERE S.Id_Asentamiento = P.Id_Asentamiento
+  AND S.CP = P.CP
+  AND C.Id_Ciudad = S.Id_Ciudad
+  AND E.Id_Estado = S.Id_Estado
+  AND M.Id_Munic_Deleg = S.Id_Munic_Deleg
+  AND C.Id_Estado = E.Id_Estado
+  AND M.Id_Estado = E.Id_Estado
+GO

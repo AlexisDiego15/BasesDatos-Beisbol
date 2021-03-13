@@ -1,0 +1,82 @@
+CREATE PROCEDURE Alta_Tipo_Producto
+  	@Id_Categoria [int],
+	@Descripcion [varchar](50)
+	 AS
+BEGIN
+  BEGIN TRAN
+    IF(SELECT COUNT(*) FROM Tipo_Producto WHERE Descripcion=@Descripcion AND Id_Categoria=@Id_Categoria) < 1
+    BEGIN
+      BEGIN TRY
+	    SELECT 'Tipo de producto registrado exitosamente' as msj
+        INSERT INTO Tipo_Producto(Descripcion,Id_Categoria) VALUES (@Descripcion,@Id_Categoria)
+      END TRY
+      BEGIN CATCH
+        SELECT 'Error al dar de alta' AS msj
+        ROLLBACK
+      END CATCH
+    END
+    ELSE
+    BEGIN
+      SELECT 'Ese tipo de producto ya esta registrado' AS msj
+      ROLLBACK
+    END
+	COMMIT TRAN
+END
+GO
+-----------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Tipo_Producto
+	@NuevaDescripcion varchar(50),
+	@Id_Tipo_Producto int,
+	@NuevaCategoria int
+	 AS
+BEGIN 
+    BEGIN TRAN
+		IF (SELECT COUNT(*) FROM Tipo_Producto WHERE Id_Tipo_Producto=@Id_Tipo_Producto) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Tipo_Producto WHERE Descripcion=@NuevaDescripcion AND Id_Categoria=@NuevaCategoria) < 1
+					BEGIN
+						SELECT 'Tipo de producto modificado correctamente' as msj
+						UPDATE Tipo_Producto SET Descripcion = @NuevaDescripcion, Id_Categoria=@NuevaCategoria WHERE Id_Tipo_Producto = @Id_Tipo_Producto
+					END
+				ELSE
+					BEGIN 
+						SELECT 'Modificacion invalida' as msj
+						ROLLBACK
+					END
+				END
+		ELSE 
+		BEGIN 
+			SELECT 'No se pudo realizar la modificacion' as msj
+			ROLLBACK
+		END
+	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------
+CREATE PROCEDURE Baja_Tipo_Producto
+	@Id_TipoP int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Tipo_Producto where Id_Tipo_Producto=@Id_TipoP) = 1
+			BEGIN
+				IF(SELECT COUNT(*) FROM Productos where Id_Tipo_Producto=@Id_TipoP) > 0
+					BEGIN
+						SELECT 'El Tipo de Producto se deshabilito porque no puede ser eliminado' AS msj
+						UPDATE Tipo_Producto SET Estatus = 0 WHERE Id_Tipo_Producto=@Id_TipoP
+					END 
+				ELSE
+					BEGIN 
+						SELECT 'Tipo de producto eliminado correctamente' AS msj
+						DELETE Tipo_Producto WHERE Id_Tipo_Producto = @Id_TipoP 
+					END 
+		END 
+		ELSE
+			BEGIN
+				SELECT 'Tipo de Producto habilitado correctamente' AS msj
+				UPDATE Tipo_Producto SET Estatus = 1 WHERE Id_Tipo_Producto=@Id_TipoP
+			END 
+		
+	COMMIT TRAN
+END
+GO    

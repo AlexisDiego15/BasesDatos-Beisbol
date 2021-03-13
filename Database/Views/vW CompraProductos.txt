@@ -1,0 +1,23 @@
+CREATE VIEW vW_ComprasProducto
+AS
+  SELECT CP.Id_Compra AS Id_Compra,
+         CP.Id_Productos AS Id_Producto,
+         CP.Id_Presentacion AS Id_Presentacion,
+         P.Nombre AS Nombre_Producto,
+         E.Descripcion AS Equipo,
+         M.Descripcion AS Marca,
+         TP.Descripcion AS Tipo_Producto,
+         C.Descripcion AS Categoria,
+         TM.Talla AS Talla_Medida,
+         CP.Cantidad AS Cantidad,
+         CP.Precio_Unitario_Compra AS Precio_Compra,
+         (CP.Cantidad * CP.Precio_Unitario_Compra) AS Total
+  FROM Compras_Producto CP
+  INNER JOIN Productos P ON P.Id_Productos = CP.Id_Productos
+  INNER JOIN Presentacion Pr ON Pr.Id_Presentacion = CP.Id_Presentacion
+  INNER JOIN Equipos E ON E.Id_Equipos = P.Id_Equipos
+  INNER JOIN Marcas M ON M.Id_Marca = P.Id_Marca
+  INNER JOIN Tipo_Producto TP ON TP.Id_Tipo_Producto = P.Id_Tipo_Producto
+  INNER JOIN Categorias C ON C.Id_Categoria = TP.Id_Categoria
+  INNER JOIN Medidas_Tallas TM ON TM.Id_Medidas_Tallas = Pr.Id_Medidas_Tallas
+GO

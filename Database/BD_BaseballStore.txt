@@ -1,0 +1,255 @@
+use master
+go
+
+if db_id ('Baseball_Store') is not null
+	drop database Baseball_Store
+go
+
+CREATE DATABASE Baseball_Store
+go
+
+use Baseball_Store;
+go
+
+CREATE TABLE Estados (
+	Id_Estado				[varchar](2) NOT NULL PRIMARY KEY,
+	Descripcion				[nvarchar](max) NOT NULL
+)
+go
+
+CREATE TABLE Ciudades (
+	Id_Ciudad				[varchar](2) NOT NULL,
+	Descripcion				[nvarchar](max) NOT NULL,
+	Id_Estado				[varchar](2) NOT NULL,
+	CONSTRAINT FK_Estado_Ciudades FOREIGN KEY (Id_Estado) REFERENCES estados(Id_estado),
+	CONSTRAINT PK_Ciudades PRIMARY KEY (Id_Ciudad, Id_Estado)
+)
+go
+
+CREATE TABLE Munic_Deleg (
+	Id_Munic_Deleg			[varchar](3) NOT NULL,
+	Id_Estado				[varchar](2) NOT NULL,
+	Nombre					[nvarchar](max) NOT NULL,
+	CONSTRAINT FK_Estado_Munic_Deleg FOREIGN KEY (Id_Estado) REFERENCES estados(Id_estado),
+	CONSTRAINT PK_Ciudades_Munic_Deleg PRIMARY KEY (Id_Munic_Deleg, Id_Estado)
+)
+go
+
+CREATE TABLE Codigo_postales (
+	CP					[varchar](5) NOT NULL,
+	Id_Munic_Deleg		[varchar](3) NOT NULL,
+	Id_Ciudad			[varchar](2) NOT NULL,
+	Id_Estado			[varchar](2) NOT NULL,
+	CONSTRAINT FK_Munic_Deleg_CP FOREIGN KEY (Id_Munic_Deleg,Id_Estado) REFERENCES Munic_Deleg(Id_Munic_Deleg, Id_Estado),
+	CONSTRAINT FK_Ciudad_CP FOREIGN KEY (Id_Ciudad,Id_Estado) REFERENCES Ciudades(Id_Ciudad,Id_Estado),
+	CONSTRAINT PK_CP_CP PRIMARY KEY (CP,Id_Estado,Id_Ciudad)
+)
+go
+
+CREATE TABLE SEPOMEX (
+	CP					[varchar](5) NOT NULL,
+	Id_Estado			[varchar](2) NOT NULL,
+	Id_Munic_Deleg		[varchar](3) NOT NULL,
+	Id_Asentamiento		[varchar](4) NOT NULL,
+	Id_Ciudad			[varchar](2) NOT NULL,
+	Descripcion_Asentamiento [nvarchar](max) NOT NULL,
+
+	CONSTRAINT FK_CP_SEPOMEX FOREIGN KEY (CP,Id_Estado,Id_Ciudad) REFERENCES Codigo_postales(CP,Id_Estado,Id_Ciudad),
+	CONSTRAINT FK_Estado_SEPOMEX FOREIGN KEY (Id_Estado) REFERENCES Estados(Id_Estado),
+	CONSTRAINT FK_Ciudad_SEPOMEX FOREIGN KEY (Id_Ciudad,Id_Estado) REFERENCES Ciudades(Id_Ciudad,Id_Estado),
+	CONSTRAINT FK_Munic_Deleg_SEPOMEX FOREIGN KEY (Id_Munic_Deleg,Id_Estado) REFERENCES Munic_Deleg(Id_Munic_Deleg,Id_Estado),
+	CONSTRAINT PK_SEPOMEX PRIMARY KEY (CP,Id_Asentamiento)
+)
+go
+
+CREATE TABLE Categorias (
+	Id_Categoria		[int] NOT NULL IDENTITY,
+	Descripcion			[varchar](50) NOT NULL,
+	Estatus					[int] DEFAULT 1,
+	CONSTRAINT PK_Categorias PRIMARY KEY (Id_Categoria)
+)
+GO
+
+CREATE TABLE Equipos (
+	Id_Equipos			[int] NOT NULL IDENTITY,
+	Descripcion			[varchar](50) NOT NULL,
+	Estatus					[int] DEFAULT 1,
+	CONSTRAINT PK_Equipos PRIMARY KEY (Id_Equipos)
+)
+GO
+
+CREATE TABLE Marcas (
+	Id_Marca			[int] NOT NULL IDENTITY,
+	Descripcion			[varchar](50) NOT NULL,
+	Estatus					[int] DEFAULT 1,
+	CONSTRAINT PK_Marcas PRIMARY KEY (Id_Marca)
+)
+GO
+
+CREATE TABLE Medidas_Tallas (
+	Id_Medidas_Tallas	[int] NOT NULL IDENTITY,
+	Talla				[varchar](15),
+	Estatus					[int] DEFAULT 1,
+	CONSTRAINT PK_Medidas_Tallas PRIMARY KEY (Id_Medidas_Tallas)
+)
+GO
+
+CREATE TABLE Tipo_Producto (
+	Id_Tipo_Producto	[int] NOT NULL IDENTITY,
+	Id_Categoria		[int] NOT NULL,
+	Descripcion			[varchar](50) NOT NULL,
+	Estatus					[int] DEFAULT 1,
+	CONSTRAINT PK_Tipo_Producto PRIMARY KEY (Id_Tipo_Producto),
+	CONSTRAINT FK_TipoProducto_Categorias FOREIGN KEY (Id_Categoria) REFERENCES [dbo].[Categorias](Id_Categoria)
+)
+GO
+
+CREATE TABLE Proveedores (
+	Id_Proveedor		[int] NOT NULL IDENTITY,
+	Nombre				[varchar](50) NOT NULL,
+	ApellidosP			[varchar](50) NOT NULL,
+	ApellidosM			[varchar](50) NOT NULL,
+	Calle				[nvarchar](40) NOT NULL,
+	No_Int				[int] NULL,
+	No_Ext				[int] NOT NULL,
+	CP					[varchar](5) NOT NULL,
+	Id_Asentamiento		[varchar](4) NOT NULL,
+
+	CONSTRAINT PK_Proveedores PRIMARY KEY (Id_Proveedor),
+	CONSTRAINT FK_Proveedores_SEPOMEX FOREIGN KEY  (CP,Id_Asentamiento) REFERENCES [dbo].[SEPOMEX](CP,Id_Asentamiento)
+)
+GO
+
+CREATE TABLE Telefonos_Proveedores (
+	Id_Telefono			[int] NOT NULL IDENTITY,
+	Telefono			[varchar](10) NOT NULL,
+	Id_Proveedor		[int] NOT NULL,
+
+	CONSTRAINT PK_Telefonos_Proveedores PRIMARY KEY (Id_Telefono),
+	CONSTRAINT FK_Telefonos_Proveedores FOREIGN KEY (Id_Proveedor) REFERENCES [dbo].[Proveedores](Id_Proveedor)
+)
+GO
+
+CREATE TABLE Productos (
+	Id_Productos		[int] NOT NULL IDENTITY,
+	Nombre				[varchar](50) NOT NULL,
+	Precio_Compra		[float] NOT NULL,
+	Precio_Venta		[float] NOT NULL,
+	Id_Proveedor		[int] NOT NULL,
+	Id_Equipos			[int] NOT NULL,
+	Id_Marca			[int] NOT NULL,
+	Id_Tipo_Producto	[int] NOT NULL,
+
+	CONSTRAINT FK_Productos_Equipos FOREIGN KEY (Id_Equipos) REFERENCES [dbo].[Equipos](Id_Equipos),
+	CONSTRAINT FK_Productos_Marca FOREIGN KEY (Id_Marca) REFERENCES [dbo].[Marcas](Id_Marca),
+	CONSTRAINT FK_Productos_Categorias FOREIGN KEY (Id_Tipo_Producto) REFERENCES [dbo].[Tipo_Producto](Id_Tipo_Producto),
+	CONSTRAINT FK_Productos_Proveedor FOREIGN KEY (Id_Proveedor) REFERENCES [dbo].[Proveedores](Id_Proveedor),
+	CONSTRAINT PK_Productos PRIMARY KEY (Id_Productos)
+)
+GO
+
+CREATE TABLE Presentacion (
+	Id_Presentacion		[int] NOT NULL IDENTITY,
+	Id_Medidas_Tallas	[int] NOT NULL,
+	Existencias		[int] DEFAULT 0,
+	Estatus			[int] DEFAULT 0,
+	Id_Productos		[int] NOT NULL,
+
+	CONSTRAINT FK_Presentacion_Medidas FOREIGN KEY (Id_Medidas_Tallas) REFERENCES [dbo].[Medidas_Tallas](Id_Medidas_Tallas),
+	CONSTRAINT FK_Presentacion_Producto FOREIGN KEY (Id_Productos) REFERENCES [dbo].[Productos](Id_Productos),
+	CONSTRAINT PK_Presentacion PRIMARY KEY (Id_Presentacion,Id_Productos)
+)
+GO
+
+CREATE TABLE Compras (
+	Id_Compra			[int] NOT NULL IDENTITY,
+	Id_Proveedor			[int] NOT NULL,
+	Fecha				[date] NOT NULL,
+
+	CONSTRAINT FK_Compras_Proveedores FOREIGN KEY (Id_Proveedor) REFERENCES [dbo].[Proveedores](Id_Proveedor),
+	CONSTRAINT PK_Comparas PRIMARY KEY (Id_Compra)
+)
+GO
+
+CREATE TABLE Compras_Producto (
+	Id_Compra			[int] NOT NULL,
+	Id_Presentacion		[int] NOT NULL,
+	Id_Productos	    [int] NOT NULL,
+	Cantidad			[int] NOT NULL,
+	Precio_Unitario_Compra	[float] NOT NULL,
+	CONSTRAINT FK_Compra_Producto_Presentacion FOREIGN KEY (Id_Presentacion, Id_Productos) REFERENCES [dbo].[Presentacion](Id_Presentacion, Id_Productos),
+	CONSTRAINT FK_Compras_Producto_Compras FOREIGN KEY (Id_Compra) REFERENCES [dbo].[Compras](Id_Compra),
+
+	CONSTRAINT PK_Compras_Producto PRIMARY KEY (Id_Compra, Id_Presentacion),
+
+)
+GO
+
+CREATE TABLE Clientes (
+	Id_Cliente			[int] NOT NULL IDENTITY,
+	Nombre				[varchar](50) NOT NULL,
+	Nombre_Usuario		[varchar](50) NOT NULL,
+	Apellidos_Paterno			[varchar](50) NOT NULL,
+	Apellidos_Materno			[varchar](50) NOT NULL,
+	Email				[varchar](320) NOT NULL,
+	Contrasena			[varchar](20) NOT NULL,
+	Telefono			[varchar](10) NULL,
+	Calle				[nvarchar](40)  NULL,
+	No_Int				[int] NULL,
+	No_Ext				[int]  NULL,
+	CP					[varchar](5)  NULL,
+	Id_Asentamiento		[varchar](4)  NULL,
+	Permiso				[bit] Default 0,
+
+
+	CONSTRAINT PK_Clientes PRIMARY KEY (Id_Cliente),
+	CONSTRAINT FK_Clientes_SEPOMEX FOREIGN KEY  (CP,Id_Asentamiento) REFERENCES [dbo].[SEPOMEX](CP,Id_Asentamiento)
+)
+GO
+
+CREATE TABLE Ventas (
+	Id_Venta			[int] NOT NULL IDENTITY,
+	Id_Cliente			[int] NOT NULL,
+	Fecha				[date] NOT NULL,
+
+	CONSTRAINT PK_Id_Venta PRIMARY KEY (Id_Venta),
+	CONSTRAINT FK_Id_Cliente FOREIGN KEY (Id_Cliente) REFERENCES [dbo].[Clientes](Id_Cliente)
+)
+GO
+
+CREATE TABLE Venta_Producto (
+	Id_Venta			[int] NOT NULL,
+	Id_Presentacion		[int] NOT NULL,
+	Id_Productos		[int] NOT NULL,
+	Cantidad			[int] NOT NULL,
+	Precio_Unitario_Venta	[float] NOT NULL,
+	CONSTRAINT FK_Venta_Producto_Presentacion FOREIGN KEY (Id_Presentacion, Id_Productos) REFERENCES [dbo].[Presentacion](Id_Presentacion, Id_Productos),
+	CONSTRAINT FK_Venta_Producto_Venta FOREIGN KEY (Id_Venta) REFERENCES [dbo].[Ventas](Id_venta),
+
+	CONSTRAINT PK_Venta_Producto PRIMARY KEY (Id_Venta, Id_Presentacion)
+)
+GO
+
+CREATE UNIQUE INDEX [Nombre_Usuario] ON [Clientes] (Nombre_Usuario);
+GO
+
+CREATE UNIQUE INDEX [Email_Clientes] ON [Clientes] (Email);
+GO
+
+CREATE UNIQUE INDEX [Telefono_Clientes] ON [Clientes] (Telefono);
+GO
+
+CREATE UNIQUE INDEX [Descripcion_Marcas] ON [Marcas] (Descripcion);
+GO
+
+CREATE UNIQUE INDEX [Descripcion_Categoria] ON [Categorias] (Descripcion);
+GO
+
+CREATE UNIQUE INDEX [Descripcion_Equipos] ON [Equipos] (Descripcion);
+GO
+
+CREATE UNIQUE INDEX [Talla_Medidas] ON [Medidas_Tallas] (Talla);
+GO
+
+CREATE UNIQUE INDEX [Telefono_Proveedores] ON [Telefonos_Proveedores] (Telefono);
+GO

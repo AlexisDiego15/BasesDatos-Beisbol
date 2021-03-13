@@ -1,0 +1,24 @@
+CREATE VIEW vW_Clientes
+AS
+  SELECT 
+	   Cl.Id_Cliente AS ID,
+	   Cl.Nombre AS Nombre,
+       Cl.Apellidos_Paterno AS ApellidoP,
+       Cl.Apellidos_Materno AS ApellidosM,
+       Cl.Calle AS Calle,
+       Cl.No_Ext AS No_Ext,
+       Cl.No_Int AS No_Int,
+       S.Descripcion_Asentamiento AS Colonia,
+       Cl.CP AS Codigo_Postal,
+       M.Nombre AS Municipio,
+       C.Descripcion AS Ciudad,
+       E.Descripcion AS Estado
+  FROM Clientes Cl, SEPOMEX S, Munic_Deleg M, Estados E, Ciudades C
+  WHERE S.Id_Asentamiento = Cl.Id_Asentamiento
+  AND S.CP = Cl.CP
+  AND C.Id_Ciudad = S.Id_Ciudad
+  AND E.Id_Estado = S.Id_Estado
+  AND M.Id_Munic_Deleg = S.Id_Munic_Deleg
+  AND C.Id_Estado = E.Id_Estado
+  AND M.Id_Estado = E.Id_Estado
+GO

@@ -1,0 +1,15 @@
+CREATE VIEW vW_Ventas
+AS
+  SELECT DISTINCT VP.Id_Venta AS Id_Venta,
+         C.Id_Cliente AS Id_Cliente,
+         C.Nombre AS Nombre_Cliente,
+         C.Apellidos_Paterno AS Apellidos_Paterno,
+         C.Apellidos_Materno AS Apellidos_Materno,
+         V.Fecha AS Fecha,
+         (SELECT sum(VP1.Cantidad) FROM Venta_Producto VP1 WHERE VP1.Id_Venta=VP.Id_Venta) AS Cantidad_Total,
+         (SELECT sum(VP2.Cantidad * VP2.Precio_Unitario_Venta ) FROM Venta_Producto VP2 WHERE VP2.Id_Venta = VP.Id_Venta) AS Costo_Total
+  FROM Venta_Producto VP
+  INNER JOIN Productos Pr ON Pr.Id_Productos = VP.Id_Productos
+  INNER JOIN Ventas V ON V.Id_Venta = VP.Id_Venta
+  INNER JOIN Clientes C ON C.Id_Cliente = V.Id_Cliente
+GO

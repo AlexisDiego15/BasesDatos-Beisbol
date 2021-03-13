@@ -1,0 +1,79 @@
+CREATE PROCEDURE Alta_Marca
+	@Descripcion varchar(50)
+	 AS
+BEGIN
+	 	  BEGIN TRAN
+	 	     IF(SELECT COUNT(*) FROM Marcas WHERE Descripcion=@Descripcion) < 1		  
+	 	     BEGIN
+	 	       BEGIN TRY
+			     SELECT 'Marca registrada exitosamente' AS msj
+	 	         INSERT INTO Marcas(Descripcion) VALUES (@Descripcion)
+	 		   END TRY
+	 	       BEGIN CATCH
+	 	         SELECT 'Error al dar de alta' AS msj
+	 	         ROLLBACK
+	 	       END CATCH
+	 	     END
+	 	     ELSE
+	 	     BEGIN
+	 	       SELECT 'Esa marca ya esta registrada' AS msj
+	 	       ROLLBACK
+	 	     END
+	 	 	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE Modificar_Marca
+	@NuevaDescripcion varchar(50),
+	@Id_Marca int
+	 AS
+BEGIN 
+    BEGIN TRAN
+		IF (SELECT COUNT(*) FROM Marcas WHERE Id_Marca=@Id_Marca) = 1
+				BEGIN
+					IF(SELECT COUNT(*) FROM Marcas WHERE Descripcion=@NuevaDescripcion) < 1
+					BEGIN
+						SELECT 'Marca modificada correctamente' as msj
+						UPDATE Marcas SET Descripcion = @NuevaDescripcion WHERE Id_Marca = @Id_Marca
+					END
+					ELSE
+					BEGIN 
+						SELECT 'Modificacion invalida' as msj
+						ROLLBACK
+					END
+				END
+		ELSE 
+		BEGIN 
+			SELECT 'No se pudo realizar la modificacion' as msj
+			ROLLBACK
+			END
+	COMMIT TRAN
+END
+GO
+-------------------------------------------------------------------------------------------
+CREATE PROCEDURE Baja_Marca
+	@Id_Marca int
+	 AS
+BEGIN
+    BEGIN TRAN
+		IF (SELECT Estatus FROM Marcas where Id_Marca=@Id_Marca) = 1
+			BEGIN
+			IF(SELECT COUNT(*) FROM Productos where Id_Marca=@Id_Marca) > 0
+				BEGIN
+					SELECT 'La marca se deshabilito ya que no se puede eliminar' AS msj
+					UPDATE Marcas SET Estatus = 0 WHERE Id_Marca = @Id_Marca
+				END 
+			ELSE
+				BEGIN 
+					SELECT 'Marca eliminada correctamente' AS msj
+					DELETE Marcas WHERE Id_Marca = @Id_Marca 
+				END 			
+		END 
+		ELSE
+			BEGIN
+				SELECT 'Marca habilitada correctamente' AS msj
+				UPDATE Marcas SET Estatus = 1 WHERE Id_Marca = @Id_Marca
+			END 
+	COMMIT TRAN
+END
+GO
